@@ -52,6 +52,13 @@ app.post("/api/product", async (req, res) => {
 app.put("/api/product/:id", async (req, res) => {
   try {
     const { name, description, price } = req.body;
+
+    const oldProduct = await prisma.product.findMany({
+      where: {
+        id: Number(req.params.id),
+      },
+    });
+
     const updated = await prisma.product.update({
       where: {
         id: Number(req.params.id),
@@ -62,6 +69,13 @@ app.put("/api/product/:id", async (req, res) => {
         price,
       },
     });
+
+    const payload = {
+      ...updated,
+      oldName: oldProduct.name,
+    };
+
+    await sendMessageToqueue("product_updated", JSON.stringify(payload));
 
     return res.status(201).json({
       message: "product Updated Successfully!",
@@ -77,15 +91,34 @@ app.put("/api/product/:id", async (req, res) => {
 
 app.delete("/api/product/:id", async (req, res) => {
   try {
+    const find = await prisma.product.findFirst({
+      where: {
+        id: Number(req.params.id),
+      },
+    });
+
+    if (!find) {
+      return res.json({
+        message: "Product not found!",
+      });
+    }
+
     await prisma.product.delete({
       where: {
         id: Number(req.params.id),
       },
     });
+
+    await sendMessageToqueue(
+      "product_deleted",
+      JSON.stringify({ id: req.params.id, name: find.name })
+    );
+
     return res.json({
       message: "Product Deleted!",
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "Internal server Error!",
     });
