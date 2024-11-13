@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: vaghani
+      MYSQL_DATABASE: ecoomerce
+      MYSQL_USER: dhruvin
+      MYSQL_PASSWORD: dhruvin
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:
