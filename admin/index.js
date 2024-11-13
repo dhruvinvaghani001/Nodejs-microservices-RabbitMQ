@@ -2,6 +2,7 @@ import express from "express";
 import * as amqp from "amqplib/callback_api.js";
 import { PrismaClient } from "@prisma/client";
 import cors from "cors";
+import sendMessageToqueue from "./services/send-message-queue.js";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -35,7 +36,7 @@ app.post("/api/product", async (req, res) => {
         price,
       },
     });
-
+    await sendMessageToqueue("product_created", JSON.stringify(newProduct));
     return res.status(201).json({
       message: "product Created Successfully!",
       data: newProduct,
